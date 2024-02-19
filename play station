@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+
+contract DegenToken is ERC20, Ownable, ERC20Burnable {
+    event LogMessage(string message);
+
+    struct PlayStation {
+        uint256 id;
+        uint256 price;
+        uint256 enumerate;
+    }
+
+    mapping(uint256 => PlayStation) public playStations;
+    mapping(address => uint256) public userBalances;
+
+    uint256 public nextPlayStationId;
+
+    constructor() ERC20("DEGEN", "DGN") Ownable(msg.sender) {
+        _addPlayStation(100, 10);
+        _addPlayStation(50, 20);
+        _addPlayStation(30, 15);
+        _addPlayStation(10, 25);
+    }
+
+    function _addPlayStation(uint256 price, uint256 enumerate) internal {
+        uint256 playStationId = nextPlayStationId++;
+        playStations[playStationId] = PlayStation(playStationId, price, enumerate);
+    }
+
+    function mintTokens(address account, uint256 amountToMint) public onlyOwner {
+        _mint(account, amountToMint);
+    }
+
+    function burnTokens(uint256 amountToBurn) public payable {
+        require(balanceOf(msg.sender) >= amountToBurn, "INSUFFICIENT FUNDS!!");
+        _burn(msg.sender, amountToBurn);
+        emit LogMessage("Burned tokens");
+    }
+
+    function transferTokens(address recipient, uint256 amount) external {
+        require(balanceOf(msg.sender) >= amount, "INSUFFICIENT FUNDS!!");
+        _transfer(msg.sender, recipient, amount);
+    }
+
+    function redeemPlayStation(uint256 playStationId, uint256 enumerateToRedeem) external payable {
+        require(enumerateToRedeem > 0, "Enumerate must be greater than zero");
+        require(playStations[playStationId].id != 0, "PlayStation with specified ID does not exist");
+        PlayStation storage playStation = playStations[playStationId];
+        require(playStation.enumerate >= enumerateToRedeem, "Insufficient PlayStation enumerate");
+
+        uint256 totalPrice = playStation.price * enumerateToRedeem;
+        require(balanceOf(msg.sender) >= totalPrice, "INSUFFICIENT FUNDS!!");
+        
+        _burn(msg.sender, totalPrice);
+        userBalances[msg.sender] += enumerateToRedeem;
+        playStation.enumerate -= enumerateToRedeem;
+
+        emit LogMessage("Redeemed PlayStation");
+    }
+}
