@@ -20,10 +20,10 @@ contract DegenToken is ERC20, Ownable, ERC20Burnable {
     uint256 public nextPlayStationId;
 
     constructor() ERC20("DEGEN", "DGN") Ownable(msg.sender) {
-        _addPlayStation(100, 10);
-        _addPlayStation(50, 20);
-        _addPlayStation(30, 15);
-        _addPlayStation(10, 25);
+        _addPlayStation(500, 10);
+        _addPlayStation(400, 20);
+        _addPlayStation(300, 15);
+        _addPlayStation(100, 25);
     }
 
     function _addPlayStation(uint256 price, uint256 enumerate) internal {
